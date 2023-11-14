@@ -255,6 +255,31 @@ void RocksDBStorageProvider::endWriteBatch()
     m_lock.unlock();
 }
 
+struct BatchStorageToken : public StorageToken {
+    std::shared_ptr<rocksdb::DB> tspdb;    // Note: This must be first so it is deleted last
+    std::unique_ptr<rocksdb::WriteBatchWithIndex> tspbatch;
+};
+
+StorageToken* RocksDBStorageProvider::begin_endWriteBatch(struct aeEventLoop *el, aePostFunctionTokenProc* callback){
+    BatchStorageToken *tok = new BatchStorageToken();
+    tok->tspbatch = std::move(m_spbatch);
+    tok->tspdb = m_spdb;
+    m_spbatch = nullptr;
+    m_lock.unlock();
+    (*m_pfactory->m_wqueue)->AddWorkFunction([this, el,callback,tok]{
+        tok->tspdb->Write(WriteOptions(),tok->tspbatch.get()->GetWriteBatch());
+        aePostFunction(el,callback,tok);
+    });
+
+    return tok;
+}
+
+void RocksDBStorageProvider::complete_endWriteBatch(StorageToken* tok){
+    delete tok;
+    tok = nullptr;
+}
+
+
 void RocksDBStorageProvider::batch_lock()
 {
     m_lock.lock();
