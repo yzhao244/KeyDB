@@ -3098,18 +3098,18 @@ void redisDbPersistentData::commitChanges(const redisDbPersistentDataSnapshot **
         auto *tok = m_spstorage->begin_endWriteBatch(serverTL->el, storageLoadCallback);
         if (tok != nullptr)
         {
-			for (client *c : serverTL->setclientsCommit)
+            for (client *c : serverTL->setclientsCommit)
             {
-				/* Remove from the list of pending writes if needed. */
-				if (c->flags & CLIENT_PENDING_WRITE) {
-					c->flags &= ~CLIENT_PENDING_WRITE;
-				}
+                /* Remove from the list of pending writes if needed. */
+                if (c->flags & CLIENT_PENDING_WRITE) {
+                    c->flags &= ~CLIENT_PENDING_WRITE;
+                }
             }
             tok->setc = std::move(serverTL->setclientsCommit);
             tok->db = this;
             tok->type = StorageToken::TokenType::BatchWrite;
         }
-		serverTL->setclientsCommit.clear();
+        serverTL->setclientsCommit.clear();
     }
 }
 
