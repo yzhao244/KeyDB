@@ -417,11 +417,11 @@ void genericSetKey(client *c, redisDb *db, robj *key, robj *val, int keepttl, in
     if (signal) signalModifiedKey(c,db,key);
 
     if(g_pserver->m_pstorageFactory != nullptr) {
-		if (!(c->flags & CLIENT_BLOCKED)) {
-			blockClient(c, BLOCKED_STORAGE);
-		}
-		serverTL->setclientsCommit.insert(c);
-	}
+        if (!(c->flags & CLIENT_BLOCKED)) {
+            blockClient(c, BLOCKED_STORAGE);
+        }
+        serverTL->setclientsCommit.insert(c);
+    }
 }
 
 /* Common case for genericSetKey() where the TTL is not retained. */
